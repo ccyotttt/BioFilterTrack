@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BioFilter-Track v1.0</title>
+<style>
+body{font-family:Arial,sans-serif;background:#0f172a;color:#fff;margin:0}
+header{background:#0b5ed7;padding:20px;text-align:center}
+.container{padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.card{background:#1e293b;padding:20px;border-radius:16px;box-shadow:0 0 10px rgba(0,0,0,.3)}
+h2{color:#60a5fa}
+.value{font-size:2rem;font-weight:bold;color:#4ade80}
+button{background:#16a34a;color:white;border:none;padding:10px 15px;border-radius:8px;cursor:pointer}
+input{width:100%;padding:8px;margin:5px 0}
+footer{text-align:center;padding:15px;background:#111827}
+</style>
+</head>
+<body>
+<header>
+<h1>BioFilter-Track v1.0</h1>
+<p>AI + IoT + Blockchain Dashboard Prototype</p>
+</header>
+
+<div class="container">
+<div class="card">
+<h2>ข้อมูลน้ำเสีย</h2>
+<label>pH เริ่มต้น</label>
+<input id="ph0" value="3.09">
+<label>pH ปัจจุบัน</label>
+<input id="pht" value="6.45">
+<label>ปริมาตรน้ำ (L)</label>
+<input id="vol" value="100">
+<label>น้ำหนักแผ่นเรซิน (g)</label>
+<input id="w" value="50">
+<button onclick="calc()">คำนวณ AI</button>
+</div>
+
+<div class="card">
+<h2>ผลการคำนวณ</h2>
+<p>qₜ</p>
+<div id="qt" class="value">0</div>
+<p>Saturation %</p>
+<div id="sat" class="value">0%</div>
+<p id="alert"></p>
+</div>
+
+<div class="card">
+<h2>Blockchain Certificate</h2>
+<p>Enterprise ID : DEMO001</p>
+<p>SHA-256 Hash (Mock)</p>
+<div id="hash">---</div>
+</div>
+
+<div class="card">
+<h2>System Architecture</h2>
+<p>IoT Sensor → ESP32 → MQTT → FastAPI → AI Engine → Blockchain → Dashboard</p>
+</div>
+</div>
+
+<footer>BioFilter-Track Research Prototype</footer>
+
+<script>
+async function calc(){
+ let ph0=parseFloat(document.getElementById('ph0').value);
+ let pht=parseFloat(document.getElementById('pht').value);
+ let V=parseFloat(document.getElementById('vol').value);
+ let W=parseFloat(document.getElementById('w').value);
+
+ let C0=(14-ph0)*10;
+ let Ct=(14-pht)*10;
+
+ let qt=((C0-Ct)*V)/W;
+ let qe=100;
+ let sat=(qt/qe)*100;
+
+ document.getElementById('qt').innerHTML=qt.toFixed(2)+" mg/g";
+ document.getElementById('sat').innerHTML=sat.toFixed(1)+"%";
+
+ if(sat>=90){
+   document.getElementById('alert').innerHTML="⚠ เปลี่ยนแผ่นกรอง";
+ }else{
+   document.getElementById('alert').innerHTML="✅ ทำงานปกติ";
+ }
+
+ let txt=`${ph0}-${pht}-${V}-${W}-${Date.now()}`;
+ let buf=new TextEncoder().encode(txt);
+ let hash=await crypto.subtle.digest("SHA-256",buf);
+ let arr=Array.from(new Uint8Array(hash));
+ let hex=arr.map(b=>b.toString(16).padStart(2,'0')).join('');
+ document.getElementById('hash').innerHTML=hex.substring(0,64);
+}
+</script>
+</body>
+</html>
